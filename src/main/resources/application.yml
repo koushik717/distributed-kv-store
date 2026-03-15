@@ -1,0 +1,22 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: distributed-kv-store
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,info
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+kv:
+  node-id: ${NODE_ID:node1}
+  data-dir: ${DATA_DIR:./data}
+  grpc-port: ${GRPC_PORT:9090}
+  peers: ${PEERS:}

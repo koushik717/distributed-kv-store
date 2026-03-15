@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  node1:
+    build: .
+    environment:
+      NODE_ID: node1
+      SERVER_PORT: 8080
+      GRPC_PORT: 9090
+      DATA_DIR: /data/node1
+      PEERS: node2:node2:9091,node3:node3:9092
+    ports:
+      - "8080:8080"
+      - "9090:9090"
+    volumes:
+      - node1-data:/data/node1
+    networks:
+      - kvnet
+
+  node2:
+    build: .
+    environment:
+      NODE_ID: node2
+      SERVER_PORT: 8081
+      GRPC_PORT: 9091
+      DATA_DIR: /data/node2
+      PEERS: node1:node1:9090,node3:node3:9092
+    ports:
+      - "8081:8081"
+      - "9091:9091"
+    volumes:
+      - node2-data:/data/node2
+    networks:
+      - kvnet
+
+  node3:
+    build: .
+    environment:
+      NODE_ID: node3
+      SERVER_PORT: 8082
+      GRPC_PORT: 9092
+      DATA_DIR: /data/node3
+      PEERS: node1:node1:9090,node2:node2:9091
+    ports:
+      - "8082:8082"
+      - "9092:9092"
+    volumes:
+      - node3-data:/data/node3
+    networks:
+      - kvnet
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9100:9090"
+    networks:
+      - kvnet
+
+volumes:
+  node1-data:
+  node2-data:
+  node3-data:
+
+networks:
+  kvnet:
+    driver: bridge

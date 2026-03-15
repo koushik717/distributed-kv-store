@@ -1,0 +1,18 @@
+# Build
+build/
+.gradle/
+out/
+
+# Data (WAL files — never commit these)
+data/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+
+# Logs
+*.log
