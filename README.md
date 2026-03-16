@@ -152,12 +152,3 @@ curl -X DELETE http://localhost:8080/kv/foo
 ```
 
 ---
-
-## Resume Bullets
-
-If you're using this project on a resume or portfolio, here is a suggested format:
-
-**Distributed KV Store** | *Java 21, Raft, gRPC, Docker* | [GitHub](#) | [Live](https://node1-production-ad3d.up.railway.app)
-- Implemented Raft consensus from scratch: randomized leader election (150–300ms timeouts), log replication with majority quorum commits, automatic failover — cluster survives any single node failure without data loss.
-- Write-Ahead Log (WAL) ensures crash recovery by replaying committed entries on restart; consistent hashing ring distributes keys with minimal remapping on topology changes; gRPC + protobuf for inter-node RPCs.
-- Benchmarked at 42,000+ writes/sec, 95,000+ reads/sec on 3-node cluster; p99 write latency <8ms; Prometheus metrics expose replication lag, term changes, and ops/sec per node.
