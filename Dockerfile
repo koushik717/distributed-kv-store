@@ -3,7 +3,7 @@ WORKDIR /app
 COPY gradle gradle
 COPY gradlew .
 COPY build.gradle.kts settings.gradle.kts ./
-COPY proto proto
+
 COPY src src
 RUN chmod +x gradlew && ./gradlew bootJar --no-daemon
 
