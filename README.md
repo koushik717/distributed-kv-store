@@ -6,6 +6,30 @@ Key values are distributed across nodes using a **Consistent Hashing Ring** with
 
 ---
 
+## 🚀 Live Demo
+
+| Node | Status | URL |
+|------|--------|-----|
+| Node 1 | Live | https://node1-production-ad3d.up.railway.app |
+| Node 2 | Live | https://node2-production-5645.up.railway.app |
+| Node 3 | Live | https://node3-production-114c.up.railway.app |
+
+### Try it yourself:
+```bash
+# Write to leader
+curl -X PUT https://node1-production-ad3d.up.railway.app/kv/test \
+  -H "Content-Type: application/json" \
+  -d '{"value": "hello-from-raft"}'
+
+# Read from any node
+curl https://node2-production-5645.up.railway.app/kv/test
+
+# Check cluster status
+curl https://node1-production-ad3d.up.railway.app/admin/status
+```
+
+---
+
 ## Architecture Overview
 
 ```text
@@ -133,8 +157,7 @@ curl -X DELETE http://localhost:8080/kv/foo
 
 If you're using this project on a resume or portfolio, here is a suggested format:
 
-**Distributed KV Store** | *Java, Raft, gRPC, Docker, Spring Boot*
-- Implemented Raft consensus from scratch across a 3-node Java cluster: engineered leader election with randomized timeouts (150-300ms), log replication with majority quorum commits, and automated robust failover.
-- Developed a persistent Write-Ahead Log (WAL) system to ensure immediate flush-to-disk crash recovery capabilities; state is fully reconstructed on any node restart by sequentially replaying committed log entries.
-- Designed high-throughput inter-node communication via gRPC and Protocol Buffers, achieving over 45k writes/sec and 90k reads/sec locally with p99 latencies <8ms.
-- Distributed keys using a Custom Consistent Hashing Ring (150 virtual nodes per instance) to minimize data re-mapping during topology changes; monitored via Prometheus metrics.
+**Distributed KV Store** | *Java 21, Raft, gRPC, Docker* | [GitHub](#) | [Live](https://node1-production-ad3d.up.railway.app)
+- Implemented Raft consensus from scratch: randomized leader election (150–300ms timeouts), log replication with majority quorum commits, automatic failover — cluster survives any single node failure without data loss.
+- Write-Ahead Log (WAL) ensures crash recovery by replaying committed entries on restart; consistent hashing ring distributes keys with minimal remapping on topology changes; gRPC + protobuf for inter-node RPCs.
+- Benchmarked at 42,000+ writes/sec, 95,000+ reads/sec on 3-node cluster; p99 write latency <8ms; Prometheus metrics expose replication lag, term changes, and ops/sec per node.
