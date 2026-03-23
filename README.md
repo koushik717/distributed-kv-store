@@ -8,24 +8,26 @@ Key values are distributed across nodes using a **Consistent Hashing Ring** with
 
 ## 🚀 Live Demo
 
+**Frontend Dashboard:** [kv-store-frontend.vercel.app](https://kv-store-frontend.vercel.app)
+
 | Node | Status | URL |
 |------|--------|-----|
-| Node 1 | Live | https://node1-production-ad3d.up.railway.app |
-| Node 2 | Live | https://node2-production-5645.up.railway.app |
-| Node 3 | Live | https://node3-production-114c.up.railway.app |
+| Node 1 | Live | http://157.230.83.134:8080 |
+| Node 2 | Live | http://157.230.83.134:8081 |
+| Node 3 | Live | http://157.230.83.134:8082 |
 
 ### Try it yourself:
 ```bash
+# Check cluster status
+curl http://157.230.83.134:8080/admin/status
+
 # Write to leader
-curl -X PUT https://node1-production-ad3d.up.railway.app/kv/test \
+curl -X PUT http://157.230.83.134:8080/kv/test \
   -H "Content-Type: application/json" \
   -d '{"value": "hello-from-raft"}'
 
 # Read from any node
-curl https://node2-production-5645.up.railway.app/kv/test
-
-# Check cluster status
-curl https://node1-production-ad3d.up.railway.app/admin/status
+curl http://157.230.83.134:8081/kv/test
 ```
 
 ---
