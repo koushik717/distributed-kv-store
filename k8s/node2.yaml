@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: node2
+  namespace: kv-store
+spec:
+  type: ClusterIP
+  selector:
+    app: kv-node
+    node: node2
+  ports:
+    - name: http
+      port: 8081
+      targetPort: 8081
+    - name: grpc
+      port: 9091
+      targetPort: 9091
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kv-node2
+  namespace: kv-store
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kv-node
+      node: node2
+  template:
+    metadata:
+      labels:
+        app: kv-node
+        node: node2
+    spec:
+      containers:
+        - name: kv-node2
+          image: kv-store:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8081
+            - containerPort: 9091
+          env:
+            - name: NODE_ID
+              value: "node2"
+            - name: SERVER_PORT
+              value: "8081"
+            - name: GRPC_PORT
+              value: "9091"
+            - name: DATA_DIR
+              value: /data/node2
+            - name: PEERS
+              value: "node1:node1:9090,node3:node3:9092"
+          readinessProbe:
+            httpGet:
+              path: /admin/status
+              port: 8081
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /admin/status
+              port: 8081
+            initialDelaySeconds: 40
+            periodSeconds: 15
+            failureThreshold: 3
+          volumeMounts:
+            - name: data
+              mountPath: /data/node2
+      volumes:
+        - name: data
+          emptyDir: {}

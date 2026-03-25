@@ -1,0 +1,7 @@
+# NAMESPACE — a logical boundary inside K8s.
+# Everything in this project lives in "kv-store" so it doesn't collide with
+# other apps running in the same cluster.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kv-store

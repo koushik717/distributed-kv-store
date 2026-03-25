@@ -1,0 +1,18 @@
+# NodePort Service — exposes node1's HTTP API to your Mac (outside the cluster).
+# minikube assigns a real port on your Mac → forwards to this Service → pod.
+# Use: minikube service node1-external -n kv-store --url
+apiVersion: v1
+kind: Service
+metadata:
+  name: node1-external
+  namespace: kv-store
+spec:
+  type: NodePort
+  selector:
+    app: kv-node
+    node: node1
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      nodePort: 30080    # fixed port on the minikube VM (30000-32767 range)

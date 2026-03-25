@@ -1,0 +1,109 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# SERVICE for node1
+# ─────────────────────────────────────────────────────────────────────────────
+# What: A stable network endpoint (DNS name + port) in front of a pod.
+# Why:  Pods die and restart with new IPs. A Service gives node2/node3 a fixed
+#       hostname "node1" they can always reach. Inside the cluster, other pods
+#       resolve "node1.kv-store.svc.cluster.local" → this Service → node1 pod.
+# Without it: node2 would have no stable address to reach node1 for gRPC calls.
+apiVersion: v1
+kind: Service
+metadata:
+  name: node1
+  namespace: kv-store
+spec:
+  # ClusterIP = internal-only; only pods inside the cluster can reach it.
+  type: ClusterIP
+  selector:
+    app: kv-node         # routes traffic to any pod with this label
+    node: node1          # ...and specifically this node
+  ports:
+    - name: http
+      port: 8080         # port clients use to call the Service
+      targetPort: 8080   # port the container actually listens on
+    - name: grpc
+      port: 9090
+      targetPort: 9090
+
+---
+# ─────────────────────────────────────────────────────────────────────────────
+# DEPLOYMENT for node1
+# ─────────────────────────────────────────────────────────────────────────────
+# What: Declares the desired state — "run 1 replica of this pod spec."
+#       K8s continuously reconciles reality toward that desired state.
+# Why:  If node1's pod crashes, the Deployment controller restarts it.
+# Without it: You'd have a bare Pod with no restart on failure.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kv-node1
+  namespace: kv-store
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kv-node
+      node: node1
+  template:
+    metadata:
+      labels:
+        app: kv-node
+        node: node1      # must match the Service selector above
+    spec:
+      containers:
+        - name: kv-node1
+          # imagePullPolicy: Never means "use the image already in minikube's
+          # local Docker daemon — don't try to pull from Docker Hub."
+          image: kv-store:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080  # HTTP API
+            - containerPort: 9090  # gRPC
+          env:
+            - name: NODE_ID
+              value: "node1"
+            - name: SERVER_PORT
+              value: "8080"
+            - name: GRPC_PORT
+              value: "9090"
+            - name: DATA_DIR
+              value: /data/node1
+            # PEERS format: nodeId:hostname:grpcPort
+            # "node2" and "node3" resolve via the ClusterIP Services below.
+            - name: PEERS
+              value: "node2:node2:9091,node3:node3:9092"
+
+          # ── READINESS PROBE ───────────────────────────────────────────────
+          # What: K8s pings /admin/status every 10s. The pod only receives
+          #       traffic once this returns HTTP 200.
+          # Why:  Prevents K8s from sending requests to a node that is still
+          #       initialising (loading data, connecting to peers).
+          # Without it: Clients hit the pod while it's warming up → errors.
+          readinessProbe:
+            httpGet:
+              path: /admin/status
+              port: 8080
+            initialDelaySeconds: 20   # wait 20s for JVM to start
+            periodSeconds: 10
+            failureThreshold: 3
+
+          # ── LIVENESS PROBE ────────────────────────────────────────────────
+          # What: If this fails 3 times in a row, K8s restarts the container.
+          # Why:  Catches deadlocks or memory leaks that don't crash the JVM.
+          livenessProbe:
+            httpGet:
+              path: /admin/status
+              port: 8080
+            initialDelaySeconds: 40
+            periodSeconds: 15
+            failureThreshold: 3
+
+          volumeMounts:
+            - name: data
+              mountPath: /data/node1
+
+      volumes:
+        # emptyDir: exists as long as the pod lives — fine for local learning.
+        # In production you'd use a PersistentVolumeClaim (PVC).
+        - name: data
+          emptyDir: {}
